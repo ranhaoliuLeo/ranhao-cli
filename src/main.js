@@ -1,53 +1,50 @@
+const path = require('path');
+const inquirer = require('inquirer');
+const ora = require('ora');
+const download = require('download-git-repo');
+
 const { program } = require('commander');
 const { version } = require('../package.json');
 const mapActions = require('./utils/commander');
-const { makeDir } = require('./utils/file-utils');
-const inquirer = require('inquirer');
-const ora = require('ora');
-const path = require('path');
-const axios = require('axios');
-const download = require('download-git-repo')
-const urlOfR = 'https://github.com/ranhaoliuLeo/ranhao-vue-cli.git'
+const { makeDir, makeFile } = require('./utils/file-utils');
+const { trans2Promise, package } = require('./utils/generator')
+const question = require('./utils/question')
 
 Object.keys(mapActions).forEach(key => {
     program
         .command(key)
         .description(mapActions[key]['description'])
         .action(async projName => {
-            if(key === '*') {
+            if (key === '*') {
                 console.log('we cant find the exactly command');
             } else {
-                if(projName === '.') {
+                if (projName === '.') {
                     console.log('install in this file')
                 } else {
                     console.log('install in the name ' + projName)
                     const id = path.resolve(process.cwd(), projName)
                     await makeDir(id);
                     const spinner = ora('加载仓库的信息').start();
-                    axios.get('https://api.github.com/repos/ranhaoliuLeo/ranhao-vue-cli').then(res => {
+                    spinner.color = 'yellow'
+                    spinner.succeed('拉取成功');
+                    const { template, name, author, license } = await inquirer.prompt(question)
+                    spinner.text = `好的，正在下载: ${template}模板`
+                    spinner.start()
+                    const downloadPromise = trans2Promise(download)
+                    let msg = await downloadPromise('github:ranhaoliuLeo/ranhao-vue-cli#main', id)
+                    if (msg) {
                         spinner.color = 'yellow'
-                        spinner.succeed('拉取成功');
-                        const choose = [res.data.name, 'test']
-                        inquirer.prompt([{
-                            type: 'list',
-                            name: 'template',
-                            message: '请问是否选择你自己的Vue Cli？（以后会添加Express CLI）',
-                            choices: choose
-                        }]).then(ans => {
-                            spinner.text = `好的，正在下载: ${ans.template}`
-                            spinner.start()
-                            download('github:ranhaoliuLeo/ranhao-vue-cli#main', id, function (err) {
-                                if(err) {
-                                    spinner.color = 'red'
-                                    spinner.fail('创建失败！')
-                                    console.error(err)
-                                    return
-                                }
-                                spinner.color = 'yellow'
-                                spinner.succeed('创建项目成功!');
-                              })
-                        })
-                    })
+                        spinner.succeed('创建项目成功!');
+                    }
+                    spinner.text = `正在载入您定制的packge.json`
+                    spinner.start();
+                    const data = JSON.stringify(package(name, license, author), null, 4);
+                    let result = makeFile(id, 'package.json', data);
+                    if (!result) {
+                        spinner.fail('文件已存在，不做修改')
+                    } else {
+                        spinner.succeed('成功载入！')
+                    }
                 }
             }
         })
@@ -60,8 +57,6 @@ program.on('--help', () => {
         console.log(mapActions[key]['example'])
     })
 })
-
-
 program
     .version(version)
     .parse(process.argv);
