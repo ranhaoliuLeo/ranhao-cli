@@ -4,12 +4,9 @@ const mapActions = require('./utils/commander');
 const { makeDir } = require('./utils/file-utils');
 const inquirer = require('inquirer');
 const ora = require('ora');
-const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const { exec } = require('child_process');
-const { url } = require('inspector');
-const { stdout, stderr } = require('process');
+const download = require('download-git-repo')
 const urlOfR = 'https://github.com/ranhaoliuLeo/ranhao-vue-cli.git'
 
 Object.keys(mapActions).forEach(key => {
@@ -37,14 +34,18 @@ Object.keys(mapActions).forEach(key => {
                             message: '请问是否选择你自己的Vue Cli？（以后会添加Express CLI）',
                             choices: choose
                         }]).then(ans => {
-                            console.log(`好的，正在下载: ${ans.template}`)
-                            exec(`git clone ${urlOfR}`, {cwd: id}, (err, stdout, stderr) => {
+                            spinner.text = `好的，正在下载: ${ans.template}`
+                            spinner.start()
+                            download('github:ranhaoliuLeo/ranhao-vue-cli#main', id, function (err) {
                                 if(err) {
-                                    console.log('exec error', err)
-                                } else {
-                                    console.log('success')
+                                    spinner.color = 'red'
+                                    spinner.fail('创建失败！')
+                                    console.error(err)
+                                    return
                                 }
-                            })
+                                spinner.color = 'yellow'
+                                spinner.succeed('创建项目成功!');
+                              })
                         })
                     })
                 }
