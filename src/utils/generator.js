@@ -34,7 +34,8 @@ function package(
             "webpack-dev-server": "^3.11.0"
           },
         "dependencies": {
-            "@babel/runtime": "^7.12.5"
+            "@babel/runtime": "^7.12.5",
+            "vue": "^2.6.12"
         }
     }
 }

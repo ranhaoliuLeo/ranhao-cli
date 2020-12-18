@@ -33,7 +33,7 @@ Object.keys(mapActions).forEach(key => {
                     spinner.text = `好的，正在下载: ${template}模板`
                     spinner.start()
                     const downloadPromise = trans2Promise(download)
-                    let msg = await downloadPromise('github:ranhaoliuLeo/ranhao-vue-cli#main', id)
+                    let msg = await downloadPromise('github:ranhaoliuLeo/ranhao-vue-cli#master', id)
                     if (msg) {
                         spinner.color = 'yellow'
                         spinner.succeed('创建项目成功!');
@@ -48,14 +48,16 @@ Object.keys(mapActions).forEach(key => {
                         spinner.succeed('成功载入！')
                     }
                     console.log('如果install出错后，可以自己重新install哦~（默认cnpm安装）');
-                    const child = exec('cnpm install',{ cwd: id }, (error, stdout, stderr) => {
-                        if(error) console.error(error);
-                        console.log(`stdout: ${stdout}`);
-                        console.error(`stderr: ${stderr}`);
+                    const child = exec('cnpm install',{ cwd: id },(err, i, out) => {
+                        console.log(i);
+                        console.log(out)
                     })
                     child.stdout.on('data',function (data) {
-                        console.log('ls command output: ' + data);
+                        console.log('output: ' + data);
                     });
+                    child.stdout.on('data', (ms) => {
+                        console.log(ms)
+                    })
                 }   
             }
         })
