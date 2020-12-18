@@ -1,4 +1,6 @@
 const path = require('path');
+const { exec } = require('child_process')
+
 const inquirer = require('inquirer');
 const ora = require('ora');
 const download = require('download-git-repo');
@@ -45,7 +47,16 @@ Object.keys(mapActions).forEach(key => {
                     } else {
                         spinner.succeed('成功载入！')
                     }
-                }
+                    console.log('如果install出错后，可以自己重新install哦~（默认cnpm安装）');
+                    const child = exec('cnpm install',{ cwd: id }, (error, stdout, stderr) => {
+                        if(error) console.error(error);
+                        console.log(`stdout: ${stdout}`);
+                        console.error(`stderr: ${stderr}`);
+                    })
+                    child.stdout.on('data',function (data) {
+                        console.log('ls command output: ' + data);
+                    });
+                }   
             }
         })
 })
